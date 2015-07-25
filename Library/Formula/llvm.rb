@@ -100,6 +100,7 @@ class Llvm < Formula
     depends_on :python => :optional
   end
   depends_on "cmake" => :build
+  depends_on "ninja" => :build
 
   if build.with? "lldb"
     depends_on "swig"
@@ -147,9 +148,8 @@ class Llvm < Formula
     end
 
     mktemp do
-      system "cmake", "-G", "Unix Makefiles", buildpath, *(std_cmake_args + args)
-      system "make"
-      system "make", "install"
+      system "cmake", "-G", "Ninja", buildpath, *(std_cmake_args + args)
+      system "ninja", "install"
       install_dsym if build.dsym?
     end
 

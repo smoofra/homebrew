@@ -9,6 +9,7 @@ class Rtags < Formula
   head "https://github.com/Andersbakken/rtags.git"
 
   depends_on "cmake" => :build
+  depends_on "ninja" => :build
   depends_on "llvm" => "with-clang"
   depends_on "openssl"
 
@@ -17,9 +18,8 @@ class Rtags < Formula
     ENV.append("LDFLAGS", "-lc++abi")
 
     mkdir "build" do
-      system "cmake", "..", *std_cmake_args
-      system "make"
-      system "make", "install"
+      system "cmake", "..", "-G", "Ninja", *std_cmake_args
+      system "ninja", "install"
     end
   end
 
