@@ -13,6 +13,8 @@ class Rtags < Formula
   depends_on "llvm" => "with-clang"
   depends_on "openssl"
 
+  option :dsym
+
   def install
     # Homebrew llvm libc++.dylib doesn't correctly reexport libc++abi
     ENV.append("LDFLAGS", "-lc++abi")
@@ -20,6 +22,7 @@ class Rtags < Formula
     mkdir "build" do
       system "cmake", "..", "-G", "Ninja", *std_cmake_args
       system "ninja", "install"
+      install_dsym if build.dsym?
     end
   end
 
