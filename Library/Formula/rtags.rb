@@ -1,7 +1,6 @@
 class Rtags < Formula
   desc "ctags-like source code cross-referencer with a clang frontend"
   homepage "https://github.com/Andersbakken/rtags"
-
   url "https://github.com/Andersbakken/rtags.git",
       :tag => "v2.0",
       :revision => "ba85598841648490e64246be802fc2dcdd45bc3c"
@@ -27,6 +26,10 @@ class Rtags < Formula
   end
 
   test do
-    system "sh", "-c", "rc >/dev/null --help  ; test $? == 1"
+    # not using shell_output because on HEAD the exit code will be 0, but on
+    # stable it will be 1.
+    cmd = "#{bin}/rc --help"
+    ohai cmd
+    assert_match /rc options/, `#{cmd}`
   end
 end

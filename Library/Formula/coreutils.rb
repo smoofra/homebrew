@@ -26,6 +26,8 @@ class Coreutils < Formula
     depends_on "wget" => :build
   end
 
+  option :dsym
+
   depends_on "gmp" => :optional
 
   option :dsym
