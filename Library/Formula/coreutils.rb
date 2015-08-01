@@ -33,19 +33,22 @@ class Coreutils < Formula
   option :dsym
 
   def install
+    # ./configure makes a diabolical un-deleteable directory called confdir-14B---
+    # Let's skip that test.
+    (buildpath/"config.cache").write(<<-END.undent)
+      gl_cv_func_getcwd_path_max='no, but it is partly working'
+      gl_cv_func_getcwd_abort_bug='yes'
+    END
+
     system "./bootstrap" if build.head?
     args = %W[
       --prefix=#{prefix}
       --program-prefix=g
+      -C
     ]
     args << "--without-gmp" if build.without? "gmp"
-
-    src = Pathname.pwd
-    mktemp do
-      system "#{src}/configure", *args
-      system "make", "install"
-      install_dsym if build.dsym?
-    end
+    system "./configure", *args
+    system "make", "install"
 
     # Symlink all commands into libexec/gnubin without the 'g' prefix
     coreutils_filenames(bin).each do |cmd|

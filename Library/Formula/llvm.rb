@@ -130,6 +130,8 @@ class Llvm < Formula
     (buildpath/"tools/lld").install resource("lld") if build.with? "lld"
     (buildpath/"tools/lldb").install resource("lldb") if build.with? "lldb"
 
+    commit_source
+
     args = %w[
       -DLLVM_OPTIMIZED_TABLEGEN=On
     ]
@@ -147,7 +149,7 @@ class Llvm < Formula
       args << "-DCMAKE_OSX_ARCHITECTURES=#{Hardware::CPU.universal_archs.as_cmake_arch_flags}"
     end
 
-    mktemp do
+    mkdir "build" do
       system "cmake", "-G", "Ninja", buildpath, *(std_cmake_args + args)
       system "ninja", "install"
       install_dsym if build.dsym?
