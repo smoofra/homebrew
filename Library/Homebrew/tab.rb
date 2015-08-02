@@ -45,6 +45,10 @@ class Tab < OpenStruct
       attributes["source"]["tap"] = attributes.delete("tapped_from")
     end
 
+    if attributes["source"]["tap"] == "mxcl/master"
+      attributes["source"]["tap"] = "Homebrew/homebrew"
+    end
+
     if attributes["source"]["spec"].nil?
       version = PkgVersion.parse path.to_s.split("/")[-2]
       if version.head?
