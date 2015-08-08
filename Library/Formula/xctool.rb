@@ -1,5 +1,3 @@
-require 'formula'
-
 class Xctool < Formula
   desc "Drop-in replacement for xcodebuild with a few extra features"
   homepage 'https://github.com/facebook/xctool'
