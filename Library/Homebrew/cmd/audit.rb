@@ -6,6 +6,7 @@ require "official_taps"
 require "tap_migrations"
 require "cmd/search"
 require "date"
+require "formula_renames"
 
 module Homebrew
   def audit
@@ -229,6 +230,11 @@ class FormulaAuditor
       return
     end
 
+    if FORMULA_RENAMES.key? name
+      problem "'#{name}' is reserved as the old name of #{FORMULA_RENAMES[name]}"
+      return
+    end
+
     if !formula.core_formula? && Formula.core_names.include?(name)
       problem "Formula name conflicts with existing core formula."
       return
@@ -268,6 +274,10 @@ class FormulaAuditor
         rescue TapFormulaAmbiguityError
           problem "Ambiguous dependency #{dep.name.inspect}."
           next
+        end
+
+        if FORMULA_RENAMES[dep.name] == dep_f.name
+          problem "Dependency '#{dep.name}' was renamed; use newname '#{dep_f.name}'."
         end
 
         if @@aliases.include?(dep.name)
@@ -428,7 +438,9 @@ class FormulaAuditor
          %r{^http://[^/.]+\.ietf\.org},
          %r{^http://[^/.]+\.tools\.ietf\.org},
          %r{^http://www\.gnu\.org/},
-         %r{^http://code\.google\.com/}
+         %r{^http://code\.google\.com/},
+         %r{^http://bitbucket\.org/},
+         %r{^http://(?:[^/]*\.)?archive\.org}
       problem "Please use https:// for #{homepage}"
     end
 
@@ -566,10 +578,6 @@ class FormulaAuditor
       problem <<-EOS.undent
        Please add ENV.prepend_path \"PATH\", \"#{need_npm}"\ to def install
       EOS
-    end
-
-    if text =~ /system "npm", "install"/ && text !~ /"HOME"/
-      problem "Please add ENV[\"HOME\"] = buildpath/\".brew_home\" to def install"
     end
   end
 
@@ -795,7 +803,7 @@ class FormulaAuditor
       problem "Use the `#{method}` Ruby method instead of `system #{system}`"
     end
 
-    if line =~ /assert .*\.include?/
+    if line =~ /assert [^!]+\.include?/
       problem "Use `assert_match` instead of `assert ...include?`"
     end
 
@@ -1050,9 +1058,12 @@ class ResourceAuditor
            %r{^http://code\.google\.com/},
            %r{^http://fossies\.org/},
            %r{^http://mirrors\.kernel\.org/},
-           %r{^http://([^/]*\.|)bintray\.com/},
+           %r{^http://(?:[^/]*\.)?bintray\.com/},
            %r{^http://tools\.ietf\.org/},
-           %r{^http://www\.mirrorservice\.org/}
+           %r{^http://www\.mirrorservice\.org/},
+           %r{^http://launchpad\.net/},
+           %r{^http://bitbucket\.org/},
+           %r{^http://(?:[^/]*\.)?archive\.org}
         problem "Please use https:// for #{p}"
       when %r{^http://search\.mcpan\.org/CPAN/(.*)}i
         problem "#{p} should be `https://cpan.metacpan.org/#{$1}`"
