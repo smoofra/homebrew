@@ -89,6 +89,14 @@ class Cmake < Formula
       ENV["LC_ALL"] = "en_US.UTF-8"
     end
 
+    def shell_output(cmd)
+      output = `#{cmd}`
+      if $?.exitstatus != 0
+        raise "oops"
+      end
+      output.strip()
+    end
+
     args = %W[
       --prefix=#{prefix}
       --no-system-libs
@@ -96,14 +104,17 @@ class Cmake < Formula
       --datadir=/share/cmake
       --docdir=/share/doc/cmake
       --mandir=/share/man
-      --system-curl
-      --system-zlib
-      --system-bzip2
+      --no-system-curl
+      --no-system-zlib
+      --no-system-bzip2
     ]
 
     if build.with? "docs"
       args << "--sphinx-man" << "--sphinx-build=#{buildpath}/sphinx/bin/sphinx-build"
     end
+
+    sdk = shell_output("xcrun -show-sdk-path")
+    args << "--" << "-DCURSES_INCLUDE_PATH=#{sdk}/usr/include"
 
     system "./bootstrap", *args
     system "make"
