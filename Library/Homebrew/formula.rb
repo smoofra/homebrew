@@ -689,10 +689,15 @@ class Formula
   def lock
     @lock = FormulaLock.new(name)
     @lock.lock
+    if oldname && (oldname_rack = HOMEBREW_CELLAR/oldname).exist? && oldname_rack.resolved_path == rack
+      @oldname_lock = FormulaLock.new(oldname)
+      @oldname_lock.lock
+    end
   end
 
   def unlock
     @lock.unlock unless @lock.nil?
+    @oldname_lock.unlock unless @oldname_lock.nil?
   end
 
   def pinnable?
@@ -736,7 +741,11 @@ class Formula
   end
 
   def file_modified?
-    return false unless which("git")
+    git_dir = MacOS.locate("git").dirname.to_s
+
+    # /usr/bin/git is a popup stub when Xcode/CLT aren't installed, so bail out
+    return false if git_dir == "/usr/bin" && !MacOS.has_apple_developer_tools?
+
     path.parent.cd do
       diff = Utils.popen_read("git", "diff", "origin/master", "--", "#{path}")
       !diff.empty? && $?.exitstatus == 0
@@ -1174,8 +1183,8 @@ class Formula
 
     patchlist.grep(DATAPatch) { |p| p.path = path }
 
-    patchlist.select(&:external?).each do |patch|
-      patch.verify_download_integrity(patch.fetch)
+    patchlist.each do |patch|
+      patch.verify_download_integrity(patch.fetch) if patch.external?
     end
   end
 
